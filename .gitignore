@@ -1,0 +1,35 @@
+# Puppet module dependencies
+.modules/
+vendor/
+
+# R10K / Code Manager cache
+.r10k/
+.fixtures.yml
+
+# Generated files
+*.log
+*.pid
+*.swp
+*.tmp
+*.bak
+
+# Test and coverage output
+coverage/
+spec/fixtures/
+.junit/
+
+# Local environment files
+.env
+.env.*
+*.local
+
+# Sensitive Puppet data
+hiera/private/
+*.eyaml
+keys/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
