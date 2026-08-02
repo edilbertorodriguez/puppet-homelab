@@ -121,11 +121,16 @@ The primary production manifest is:
 environments/production/manifests/site.pp
 ```
 
-The production manifest classifies the default node by including the reusable `common` class:
+The production manifest classifies the default node by declaring the reusable `common` class with parameter overrides:
 
 ```puppet
 node default {
-  include common
+  class { 'common':
+    package_name      => 'htop',
+    managed_file_path => '/tmp/puppet-v030.txt',
+    managed_content   => "Managed by Puppet v0.3.0\n",
+    managed_file_mode => '0600',
+  }
 }
 ```
 
@@ -139,25 +144,43 @@ The reusable module is defined in:
 modules/common/manifests/init.pp
 ```
 
-Its class declaration is:
+The `common` class accepts four typed parameters:
 
 ```puppet
-class common {
-  package { 'htop':
+class common (
+  String $package_name      = 'htop',
+  String $managed_file_path = '/tmp/puppet-managed.txt',
+  String $managed_content   = "Managed by Puppet\n",
+  String $managed_file_mode = '0644',
+) {
+  package { $package_name:
     ensure => installed,
   }
 
-  file { '/tmp/puppet-managed.txt':
+  file { $managed_file_path:
     ensure  => file,
-    content => "Managed by Puppet\n",
-    mode    => '0644',
+    content => $managed_content,
+    mode    => $managed_file_mode,
   }
 }
 ```
 
-Moving these resources into a class separates node classification from resource implementation.
+The default values preserve the original behavior, while callers can override the package, file path, file content, and file mode.
 
-The production manifest determines which class is assigned, while the module contains the resources that Puppet manages.
+The production manifest currently overrides the file-related parameters:
+
+```puppet
+node default {
+  class { 'common':
+    package_name      => 'htop',
+    managed_file_path => '/tmp/puppet-v030.txt',
+    managed_content   => "Managed by Puppet v0.3.0\n",
+    managed_file_mode => '0600',
+  }
+}
+```
+
+This separates reusable resource logic from environment-specific configuration.
 
 ---
 
@@ -177,13 +200,13 @@ package { 'htop':
 
 ### File Resource
 
-Puppet creates and maintains a test file:
+The current production classification creates and maintains a customized test file:
 
 ```puppet
-file { '/tmp/puppet-managed.txt':
+file { '/tmp/puppet-v030.txt':
   ensure  => file,
-  content => "Managed by Puppet\n",
-  mode    => '0644',
+  content => "Managed by Puppet v0.3.0\n",
+  mode    => '0600',
 }
 ```
 
@@ -240,7 +263,7 @@ The `--noop` option compiles the catalog and reports required changes without mo
 Example drift detection:
 
 ```text
-File[/tmp/puppet-managed.txt]/ensure:
+File[/tmp/puppet-v030.txt]/ensure:
 current_value 'absent', should be 'file' (noop)
 ```
 
@@ -259,20 +282,20 @@ sudo puppet apply \
 Verify the managed file:
 
 ```bash
-ls -l /tmp/puppet-managed.txt
-cat /tmp/puppet-managed.txt
+ls -l /tmp/puppet-v030.txt
+sudo cat /tmp/puppet-v030.txt
 ```
 
 Expected permissions and ownership:
 
 ```text
--rw-r--r-- 1 root root
+-rw------- 1 root root
 ```
 
 Expected content:
 
 ```text
-Managed by Puppet
+Managed by Puppet v0.3.0
 ```
 
 ---
@@ -282,7 +305,7 @@ Managed by Puppet
 The managed file can be removed manually to simulate configuration drift:
 
 ```bash
-sudo rm /tmp/puppet-managed.txt
+sudo rm /tmp/puppet-v030.txt
 ```
 
 Preview Puppet’s corrective action:
@@ -376,8 +399,9 @@ The current `common` module is maintained locally and does not require a Forge d
 |---|---|
 | v0.1.0 | Initial local Puppet workflow with package and file resource management |
 | v0.2.0 | Refactors managed resources into a reusable `common` module |
+| v0.3.0 | Adds typed class parameters and production parameter overrides |
 
-Version `v0.2.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.3.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 
@@ -399,6 +423,10 @@ Completed:
 - Configuration-drift correction tested
 - Idempotency confirmed
 - Git repository and v0.1.0 release published
+- Typed `common` class parameters implemented
+- Default parameter behavior verified
+- Production parameter overrides verified
+- Custom file path, content, and mode tested
 
 ---
 
@@ -411,7 +439,6 @@ Future development may include:
 - Certificate signing and trust establishment
 - Node-specific classification
 - Hiera data separation
-- Parameterized Puppet classes
 - Package, service, user, and SSH configuration classes
 - Automated validation scripts
 - CI checks for Puppet manifests
