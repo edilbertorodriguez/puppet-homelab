@@ -102,37 +102,64 @@ puppet-homelab/
 
 ## Production Environment
 
-The Puppet environment configuration is stored in:
+The Puppet environment is located at:
 
 ```text
-environment.conf
+environments/production/
 ```
 
-Current configuration:
-
-```ini
-modulepath = modules:$basemodulepath
-manifest = manifests
-```
-
-The primary production manifest is:
+Its Hiera configuration is stored in:
 
 ```text
-environments/production/manifests/site.pp
+environments/production/hiera.yaml
 ```
 
-The production manifest classifies the default node by declaring the reusable `common` class with parameter overrides:
+Current Hiera v5 configuration:
+
+```yaml
+---
+version: 5
+
+defaults:
+  datadir: data
+  data_hash: yaml_data
+
+hierarchy:
+  - name: Common data
+    path: common.yaml
+```
+
+Environment-specific parameter values are stored in:
+
+```text
+environments/production/data/common.yaml
+```
+
+Current production data:
+
+```yaml
+---
+common::package_name: 'htop'
+common::managed_file_path: '/tmp/puppet-v040.txt'
+common::managed_content: "Managed by Puppet v0.4.0\n"
+common::managed_file_mode: '0600'
+```
+
+The production manifest is now simplified to:
 
 ```puppet
 node default {
-  class { 'common':
-    package_name      => 'htop',
-    managed_file_path => '/tmp/puppet-v030.txt',
-    managed_content   => "Managed by Puppet v0.3.0\n",
-    managed_file_mode => '0600',
-  }
+  include common
 }
 ```
+
+When Puppet includes the `common` class, Hiera automatically looks up keys matching the class parameters, such as:
+
+```text
+common::managed_file_path
+```
+
+This separates environment-specific data from Puppet class logic and node classification.
 
 ---
 
@@ -165,18 +192,13 @@ class common (
 }
 ```
 
-The default values preserve the original behavior, while callers can override the package, file path, file content, and file mode.
+The default values preserve the original behavior when no Hiera data is available.
 
-The production manifest currently overrides the file-related parameters:
+In the production environment, Hiera supplies values for the class parameters through automatic parameter lookup. The manifest only needs to include the class:
 
 ```puppet
 node default {
-  class { 'common':
-    package_name      => 'htop',
-    managed_file_path => '/tmp/puppet-v030.txt',
-    managed_content   => "Managed by Puppet v0.3.0\n",
-    managed_file_mode => '0600',
-  }
+  include common
 }
 ```
 
@@ -203,9 +225,9 @@ package { 'htop':
 The current production classification creates and maintains a customized test file:
 
 ```puppet
-file { '/tmp/puppet-v030.txt':
+file { '/tmp/puppet-v040.txt':
   ensure  => file,
-  content => "Managed by Puppet v0.3.0\n",
+  content => "Managed by Puppet v0.4.0\n",
   mode    => '0600',
 }
 ```
@@ -263,7 +285,7 @@ The `--noop` option compiles the catalog and reports required changes without mo
 Example drift detection:
 
 ```text
-File[/tmp/puppet-v030.txt]/ensure:
+File[/tmp/puppet-v040.txt]/ensure:
 current_value 'absent', should be 'file' (noop)
 ```
 
@@ -282,8 +304,8 @@ sudo puppet apply \
 Verify the managed file:
 
 ```bash
-ls -l /tmp/puppet-v030.txt
-sudo cat /tmp/puppet-v030.txt
+ls -l /tmp/puppet-v040.txt
+sudo cat /tmp/puppet-v040.txt
 ```
 
 Expected permissions and ownership:
@@ -295,7 +317,7 @@ Expected permissions and ownership:
 Expected content:
 
 ```text
-Managed by Puppet v0.3.0
+Managed by Puppet v0.4.0
 ```
 
 ---
@@ -305,7 +327,7 @@ Managed by Puppet v0.3.0
 The managed file can be removed manually to simulate configuration drift:
 
 ```bash
-sudo rm /tmp/puppet-v030.txt
+sudo rm /tmp/puppet-v040.txt
 ```
 
 Preview Puppet’s corrective action:
@@ -400,9 +422,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.1.0 | Initial local Puppet workflow with package and file resource management |
 | v0.2.0 | Refactors managed resources into a reusable `common` module |
 | v0.3.0 | Adds typed class parameters and production parameter overrides |
+| v0.4.0 | Moves production class parameters into Hiera v5 data |
 
-Version `v0.3.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
-
+Version `v0.4.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 ---
 
 ## Current Status
@@ -427,6 +449,10 @@ Completed:
 - Default parameter behavior verified
 - Production parameter overrides verified
 - Custom file path, content, and mode tested
+- Hiera v5 configuration added
+- Production data moved into `common.yaml`
+- Automatic class-parameter lookup verified
+- Hiera-backed catalog application tested
 
 ---
 
@@ -438,7 +464,6 @@ Future development may include:
 - Puppet Agent enrollment
 - Certificate signing and trust establishment
 - Node-specific classification
-- Hiera data separation
 - Package, service, user, and SSH configuration classes
 - Automated validation scripts
 - CI checks for Puppet manifests
