@@ -1,0 +1,5 @@
+---
+common::package_name: 'htop'
+common::managed_file_path: '/tmp/puppet-v040.txt'
+common::managed_content: "Managed by Puppet v0.4.0\n"
+common::managed_file_mode: '0600'
