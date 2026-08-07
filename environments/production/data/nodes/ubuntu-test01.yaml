@@ -1,0 +1,3 @@
+---
+common::managed_file_path: '/tmp/puppet-test01.txt'
+common::managed_content: "Managed specifically for ubuntu-test01\n"
