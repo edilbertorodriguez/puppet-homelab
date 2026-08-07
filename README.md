@@ -125,9 +125,34 @@ defaults:
   data_hash: yaml_data
 
 hierarchy:
+  - name: Node-specific data
+    path: "nodes/%{facts.networking.hostname}.yaml"
+
   - name: Common data
     path: common.yaml
 ```
+
+Puppet v0.5.0 introduces node-specific Hiera data.
+
+Hierarchy precedence:
+
+1. `environments/production/data/nodes/<hostname>.yaml`
+2. `environments/production/data/common.yaml`
+
+Node-specific values override common values. Any parameters not defined
+for a node fall back to `common.yaml`.
+
+Current node-specific examples:
+
+- `ubuntu-test01` -> `/tmp/puppet-test01.txt`
+- `ubuntu-test02` -> `/tmp/puppet-test02.txt`
+
+For the current local Puppet workflow, node classification uses:
+
+`facts.networking.hostname`
+
+A future Puppet Server/Agent milestone can transition this hierarchy to
+`trusted.certname`.
 
 Environment-specific parameter values are stored in:
 
@@ -423,8 +448,10 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.2.0 | Refactors managed resources into a reusable `common` module |
 | v0.3.0 | Adds typed class parameters and production parameter overrides |
 | v0.4.0 | Moves production class parameters into Hiera v5 data |
+| v0.5.0 | Adds node-specific Hiera data and hostname-based classification |
 
-Version `v0.4.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.5.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+
 ---
 
 ## Current Status

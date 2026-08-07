@@ -6,5 +6,8 @@ defaults:
   data_hash: yaml_data
 
 hierarchy:
+  - name: Node-specific data
+    path: "nodes/%{facts.networking.hostname}.yaml"
+
   - name: Common data
     path: common.yaml
