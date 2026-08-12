@@ -229,11 +229,38 @@ node default {
 
 This separates reusable resource logic from environment-specific configuration.
 
+### Resource Management
+
+Puppet v0.6.0 expands the `common` module to manage additional operating system resources.
+
+Managed resources now include:
+
+- Packages
+  - `htop`
+  - `qemu-guest-agent`
+- Service
+  - `qemu-guest-agent` is enforced in the `running` state
+- User
+  - `puppetlab`
+  - home directory managed by Puppet
+  - shell set to `/bin/bash`
+
+The service package is explicitly required before Puppet attempts to manage the service.
+
+Because `qemu-guest-agent` is a static systemd unit on Ubuntu, Puppet manages its running state but does not attempt to enable it.
+
+Resource values are supplied through Hiera using:
+
+- `common::service_package_name`
+- `common::service_name`
+- `common::managed_user`
+- `common::managed_user_shell`
+
 ---
 
 ## Managed Resources
 
-The `common` module currently manages two resources.
+The `common` module manages packages, services, users, and files.
 
 ### Package Resource
 
@@ -449,8 +476,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.3.0 | Adds typed class parameters and production parameter overrides |
 | v0.4.0 | Moves production class parameters into Hiera v5 data |
 | v0.5.0 | Adds node-specific Hiera data and hostname-based classification |
+| v0.6.0 | Adds package, service, and user resource management |
 
-Version `v0.5.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.6.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 
