@@ -256,6 +256,33 @@ Resource values are supplied through Hiera using:
 - `common::managed_user`
 - `common::managed_user_shell`
 
+### SSH Hardening Module
+
+Puppet v0.7.0 introduces a dedicated `ssh_hardening` module.
+
+The module manages:
+
+- `/etc/ssh/sshd_config.d/99-puppet-hardening.conf`
+- `PermitRootLogin`
+- `PasswordAuthentication`
+- SSH configuration validation with `/usr/sbin/sshd -t`
+- the `ssh` service
+
+The managed drop-in is rendered from an EPP template.
+
+Configuration changes follow this notification chain:
+
+`File -> Exec[validate-sshd-config] -> Service[ssh]`
+
+This ensures Puppet validates the SSH configuration before restarting the SSH service.
+
+Current production policy:
+
+- `PermitRootLogin no`
+- `PasswordAuthentication yes`
+
+Password authentication remains enabled during this milestone to avoid lockout while the lab still uses a local Puppet workflow. Key-based SSH access was verified independently before hardening tests.
+
 ---
 
 ## Managed Resources
@@ -477,8 +504,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.4.0 | Moves production class parameters into Hiera v5 data |
 | v0.5.0 | Adds node-specific Hiera data and hostname-based classification |
 | v0.6.0 | Adds package, service, and user resource management |
+| v0.7.0 | Adds a dedicated SSH hardening module with validation and service notifications |
 
-Version `v0.6.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.7.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 
