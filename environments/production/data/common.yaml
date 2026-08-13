@@ -8,3 +8,6 @@ common::service_package_name: 'qemu-guest-agent'
 common::service_name: 'qemu-guest-agent'
 common::managed_user: 'puppetlab'
 common::managed_user_shell: '/bin/bash'
+
+ssh_hardening::permit_root_login: false
+ssh_hardening::password_authentication: true

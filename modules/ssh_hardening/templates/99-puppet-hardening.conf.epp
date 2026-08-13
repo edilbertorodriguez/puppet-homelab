@@ -1,0 +1,9 @@
+PermitRootLogin <%= $permit_root_login ? {
+  true    => 'yes',
+  default => 'no',
+} %>
+
+PasswordAuthentication <%= $password_authentication ? {
+  true    => 'yes',
+  default => 'no',
+} %>
