@@ -310,6 +310,38 @@ Run the validation workflow with:
 
 ---
 
+### GitHub Actions CI
+
+Puppet v0.9.0 adds continuous integration through GitHub Actions.
+
+Workflow:
+
+`.github/workflows/puppet-ci.yml`
+
+The workflow runs on:
+
+- pushes to `main`
+- pull requests targeting `main`
+
+The CI job performs the following checks:
+
+1. Checks out the repository
+2. Installs Puppet 8 on an Ubuntu runner
+3. Verifies Puppet and Ruby versions
+4. Validates Bash syntax for `scripts/validate.sh`
+5. Validates Puppet manifests
+6. Validates EPP templates
+7. Validates YAML/Hiera files
+8. Performs required Hiera lookups
+
+The workflow uses read-only repository permissions:
+
+`contents: read`
+
+Live-system validation such as `sshd -t` against the configured host and Puppet idempotency checks remain in the local `scripts/validate.sh` workflow because GitHub-hosted runners are ephemeral and do not represent the managed lab system.
+
+---
+
 ## Managed Resources
 
 The `common` module manages packages, services, users, and files.
@@ -531,8 +563,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.6.0 | Adds package, service, and user resource management |
 | v0.7.0 | Adds a dedicated SSH hardening module with validation and service notifications |
 | v0.8.0 | Adds automated validation for Puppet syntax, Hiera, SSH configuration, and idempotency |
+| v0.9.0 | Adds GitHub Actions CI for automated Puppet code validation |
 
-Version `v0.8.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.9.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 

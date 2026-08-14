@@ -1,0 +1,63 @@
+name: Puppet CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Puppet
+        run: |
+          wget https://apt-puppetcore.puppet.com/public/puppet8-release-noble.deb
+          sudo dpkg -i puppet8-release-noble.deb
+          sudo apt-get update
+          sudo apt-get install -y puppet-agent
+          echo "/opt/puppetlabs/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Puppet installation
+        run: |
+          puppet --version
+          ruby --version
+
+      - name: Validate Puppet code
+        run: |
+          bash -n scripts/validate.sh
+
+          puppet parser validate \
+            environments/production/manifests/site.pp \
+            modules/common/manifests/init.pp \
+            modules/ssh_hardening/manifests/init.pp
+
+          puppet epp validate \
+            modules/ssh_hardening/templates/99-puppet-hardening.conf.epp
+
+          ruby -e "
+          require 'yaml'
+          YAML.load_file('environments/production/hiera.yaml')
+          YAML.load_file('environments/production/data/common.yaml')
+          YAML.load_file('environments/production/data/nodes/ubuntu-test01.yaml')
+          YAML.load_file('environments/production/data/nodes/ubuntu-test02.yaml')
+          "
+
+          puppet lookup common::managed_file_mode \
+            --environmentpath="$(pwd)/environments" \
+            --environment=production \
+            --modulepath="$(pwd)/modules"
+
+          puppet lookup ssh_hardening::permit_root_login \
+            --environmentpath="$(pwd)/environments" \
+            --environment=production \
+            --modulepath="$(pwd)/modules"
