@@ -285,6 +285,31 @@ Password authentication remains enabled during this milestone to avoid lockout w
 
 ---
 
+### Automated Validation
+
+Puppet v0.8.0 adds an executable validation script:
+
+`scripts/validate.sh`
+
+The script performs six checks:
+
+1. Puppet manifest syntax validation
+2. EPP template validation
+3. YAML/Hiera file validation
+4. Required Hiera lookups
+5. SSH configuration validation with `sshd -t`
+6. Puppet idempotency validation using `puppet apply --noop`
+
+The idempotency check fails with exit code `1` when Puppet detects configuration drift and returns exit code `0` when the system is compliant.
+
+Run the validation workflow with:
+
+```bash
+./scripts/validate.sh
+```
+
+---
+
 ## Managed Resources
 
 The `common` module manages packages, services, users, and files.
@@ -505,8 +530,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.5.0 | Adds node-specific Hiera data and hostname-based classification |
 | v0.6.0 | Adds package, service, and user resource management |
 | v0.7.0 | Adds a dedicated SSH hardening module with validation and service notifications |
+| v0.8.0 | Adds automated validation for Puppet syntax, Hiera, SSH configuration, and idempotency |
 
-Version `v0.7.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v0.8.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 
