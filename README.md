@@ -551,6 +551,71 @@ The current `common` module is maintained locally and does not require a Forge d
 
 ---
 
+### Puppet Server and Agent Architecture
+
+Puppet v1.0.0 introduces a centralized Puppet Server and Puppet Agent architecture.
+
+Architecture:
+
+```text
+GitHub
+  |
+  v
+puppet-homelab repository
+  |
+  v
+puppet-server.local
+Puppet Server / CA
+10.10.60.111
+  |
+  +-----------------------+
+  |                       |
+  v                       v
+ubuntu-test01         ubuntu-test02
+Puppet Agent          Puppet Agent
+10.10.60.109          10.10.60.110
+```
+
+The Puppet Server runs Puppet Server 8.9.10 on Ubuntu Server 24.04.
+
+Both managed nodes run Puppet Agent 8.21.0.
+
+The Puppet Server provides:
+
+- centralized catalog compilation
+- Puppet CA certificate management
+- production environment hosting
+- Hiera-backed configuration data
+- reusable Puppet modules
+- node-specific classification
+
+Signed certificates are maintained for:
+
+- `puppet-server.local`
+- `ubuntu-test01`
+- `ubuntu-test02`
+
+Agents connect to:
+
+`puppet-server.local:8140`
+
+Both agents run the Puppet service continuously and request catalogs automatically.
+
+Node-specific Hiera data continues to classify systems by:
+
+`facts.networking.hostname`
+
+This allows:
+
+- `ubuntu-test01` to manage `/tmp/puppet-test01.txt`
+- `ubuntu-test02` to manage `/tmp/puppet-test02.txt`
+
+Centralized drift correction was validated by manually changing the managed file on `ubuntu-test01`. A subsequent Puppet agent run detected the drift and restored the configured content.
+
+Ubuntu 24.04 uses socket-activated OpenSSH. The `ssh_hardening` module was updated so Puppet validates SSH configuration and refreshes the SSH service without forcing `ssh.service` into a continuously running state.
+
+---
+
 ## Version History
 
 | Version | Description |
@@ -564,8 +629,9 @@ The current `common` module is maintained locally and does not require a Forge d
 | v0.7.0 | Adds a dedicated SSH hardening module with validation and service notifications |
 | v0.8.0 | Adds automated validation for Puppet syntax, Hiera, SSH configuration, and idempotency |
 | v0.9.0 | Adds GitHub Actions CI for automated Puppet code validation |
+| v1.0.0 | Adds centralized Puppet Server/Agent architecture, certificate enrollment, scheduled agents, and drift correction |
 
-Version `v0.9.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
+Version `v1.0.0` remains under development until the feature branch is reviewed, merged, tagged, and published.
 
 ---
 
