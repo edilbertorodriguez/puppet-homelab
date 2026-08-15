@@ -24,7 +24,5 @@ class ssh_hardening (
   }
 
   service { 'ssh':
-    ensure => running,
-    enable => true,
   }
 }
