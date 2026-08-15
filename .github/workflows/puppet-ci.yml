@@ -20,11 +20,22 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install Puppet
+        env:
+          PUPPET_FORGE_API_KEY: ${{ secrets.PUPPET_FORGE_API_KEY }}
         run: |
           wget https://apt-puppetcore.puppet.com/public/puppet8-release-noble.deb
           sudo dpkg -i puppet8-release-noble.deb
+
+          sudo install -m 600 /dev/null /etc/apt/auth.conf.d/apt-puppetcore-puppet.conf
+          printf '%s\n' \
+            'machine apt-puppetcore.puppet.com' \
+            'login forge-key' \
+            "password ${PUPPET_FORGE_API_KEY}" \
+            | sudo tee /etc/apt/auth.conf.d/apt-puppetcore-puppet.conf >/dev/null
+
           sudo apt-get update
           sudo apt-get install -y puppet-agent
+
           echo "/opt/puppetlabs/bin" >> "$GITHUB_PATH"
 
       - name: Verify Puppet installation
